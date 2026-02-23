@@ -31,7 +31,7 @@ jobs:
               uses: docker/build-push-action@v6
               with:
                 push: true
-                tags: ${{secrets.DOCKER_USERNAME}}/info-app:latest
+                tags: ${{secrets.DOCKER_USERNAME}}/ci-cd-repo:latest
 
             - name: Logging to AWS
               uses: aws-actions/configure-aws-credentials@v4
