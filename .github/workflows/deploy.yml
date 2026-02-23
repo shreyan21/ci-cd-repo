@@ -30,6 +30,7 @@ jobs:
             - name: Pushing to docker hub
               uses: docker/build-push-action@v6
               with:
+                context: .
                 push: true
                 tags: ${{secrets.DOCKER_USERNAME}}/ci-cd-repo:latest
 
