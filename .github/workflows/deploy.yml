@@ -29,7 +29,7 @@ jobs:
            IP=$(aws ec2 run-instances \
            --count 1 \
            --security-group-ids sg-062a6b166596e2bc1 \
-           --key-name mykey \ 
+           --key-name mykey \
            --image-id ami-019715e0d74f695be \
            --instance-type t2.micro \
            --query 'Instances[0].PublicIpAddress' \
