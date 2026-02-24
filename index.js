@@ -10,7 +10,10 @@ app.get('/home', async (req, res) => {
    return res.status(200).json({message:'It is home route' })
 
 
-}
-)
+})
+app.get('/:name',async(req,res)=>{
+   return res.send(`Hello ${req.params.name}`)
+})
+
 
 app.listen(4000)
