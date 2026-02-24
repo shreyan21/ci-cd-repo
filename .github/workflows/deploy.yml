@@ -43,14 +43,14 @@ jobs:
                 aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
                 aws-region: ap-south-1
 
-            # - name: Creating EC2
-            #   run: |
-            #     aws ec2 run-instances \
-            #     --image-id ami-019715e0d74f695be \
-            #     --instance-type t2.micro \
-            #     --count 1 \
-            #     --security-group-ids sg-062a6b166596e2bc1 \
-            #     --key-name mypair
+            - name: Creating EC2
+              run: |
+                aws ec2 run-instances \
+                --image-id ami-019715e0d74f695be \
+                --instance-type t2.micro \
+                --count 1 \
+                --security-group-ids sg-062a6b166596e2bc1 \
+                --key-name mykey
     deploy:
         needs: image-pushing
         runs-on: ubuntu-latest
