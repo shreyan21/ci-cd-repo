@@ -1,62 +1,74 @@
-name: deploying to EC2
-on:
-   push:
-    branches:
-        master
+name: Deploying app
 
+on:
+  push:
+    branches:
+      master
 
 jobs:
-    image-pushing:
-        runs-on: ubuntu-latest
-        steps:
-           
+  Deployingonec2:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
 
-            - name: Logging to AWS
-              uses: aws-actions/configure-aws-credentials@v4
-              with:
-                aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
-                aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
-                aws-region: ap-south-1
+    steps:
+     
 
-            # - name: Creating EC2
-            #   run: |
-            #     aws ec2 run-instances \
-            #     --image-id ami-019715e0d74f695be \
-            #     --instance-type t2.micro \
-            #     --count 1 \
-            #     --security-group-ids sg-062a6b166596e2bc1 \
-            #     --key-name mykey
-    deploy:
-        needs: image-pushing
-        runs-on: ubuntu-latest
-        steps:
+      - name: logging into AWS
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::891377368653:role/ec2-access-to-github
+          aws-region: ap-south-1
+        
+
+      - name: creating ec2
+        id: ec2_setup
+        run: |
           
-            
-               
-          - name: SSH into EC2
-            uses: appleboy/ssh-action@v0.1.10
-            with:
-              host: ${{secrets.EC2_HOST}}
-              username: ${{secrets.EC2_USER}}
-              key: ${{secrets.EC2_SSH_KEY}}
-              script: |
-                sudo apt update -y
-                sudo apt install docker.io -y
-                sudo service docker start
-                sudo docker pull ${{secrets.DOCKER_USERNAME}}/ci-cd-repo:latest
-                sudo docker run  -p 4000:4000 --name c1 ${{secrets.DOCKER_USERNAME}}/ci-cd-repo:latest
+           IP=$(aws ec2 run-instances \
+           --count 1 \
+           --security-group-ids sg-062a6b166596e2bc1 \
+           --key-name mykey \ 
+           --image-id ami-019715e0d74f695be \
+           --instance-type t2.micro \
+           --query 'Instances[0].PublicIpAddress' \
+           --output text)
 
+           echo "INSTANCE_IP=$IP">>$GITHUB_OUTPUT
+           echo "Instance created with $IP"
+      
+      - name: Waiting for ssh to be ready
+        run: sleep 60
+      
+      - name: Logging into EC2
+        uses: appleboy/ssh-actions@1.0.3
+        with:
+          host: ${{steps.ec2_setup.outputs.INSTANCE_IP}}
+          username: ubuntu
+          key: ${{secrets.EC2_SSH_KEY}}
+          script: |
+            sudo su
+            apt update -y
+            apt upgrade -y
+            apt install docker.io -y
+            systemctl start docker
+            docker run -d -p 4000:4000 --name c2 shreyans1/ci-cd-repo:latest
+
+
+
+          
+      
+      
+
+
+      
+      
+
+      
+      
 
 
         
 
-
-            
-            
-
-
-              
-
-
-
-            
+   
