@@ -42,7 +42,7 @@ jobs:
         run: sleep 60
       
       - name: Logging into EC2
-        uses: appleboy/ssh-actions@1.0.3
+        uses: appleboy/ssh-actions@v1.0.3
         with:
           host: ${{steps.ec2_setup.outputs.INSTANCE_IP}}
           username: ubuntu
