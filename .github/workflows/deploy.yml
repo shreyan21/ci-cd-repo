@@ -43,14 +43,31 @@ jobs:
                 aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
                 aws-region: ap-south-1
 
-            - name: Creating EC2
-              run: |
-                aws ec2 run-instances \
-                --image-id ami-019715e0d74f695be \
-                --instance-type t2.micro \
-                --count 1 \
-                --security-group-ids sg-062a6b166596e2bc1 \
-                --key-name mypair
+            # - name: Creating EC2
+            #   run: |
+            #     aws ec2 run-instances \
+            #     --image-id ami-019715e0d74f695be \
+            #     --instance-type t2.micro \
+            #     --count 1 \
+            #     --security-group-ids sg-062a6b166596e2bc1 \
+            #     --key-name mypair
+    deploy:
+        needs: image-pushing
+        runs-on: ubutu-latest
+        steps:
+          - name: SSH into EC2
+            uses: appleboy/ssh-action@v0.1.10
+            with:
+              host: ${{secrets.EC2_HOST}}
+              username: ${{secrets.EC2_USER}}
+              key: ${{secrets.EC2_SSH_KEY}}
+              script: |
+                docker pull ${{secrets.DOCKER_USERNAME}}/ci-cd-repo:latest
+                docker run -pd 4000:4000 --name c1 ${{secrets.DOCKER_USERNAME}}/ci-cd-repo:latest
+
+
+
+        
 
 
             
