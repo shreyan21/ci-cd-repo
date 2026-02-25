@@ -17,7 +17,7 @@ jobs:
        uses: actions/checkout@v4
     
      - name: Assuming role
-       uses: aws-actions/configure-aws-credentials@v2
+       uses: aws-actions/configure-aws-credentials@v4
        with:
         role-to-assume: arn:aws:iam::891377368653:role/ec2-access-to-github
         aws-region: ap-south-1
@@ -25,7 +25,7 @@ jobs:
      - name: Creating EC2
        run: |
          INSTANCE_ID=$(
-         --aws ec2 run-instances \
+         aws ec2 run-instances \
          --count 1\
          --security-group-ids ${{secrets.GITHUB_AWS_SECURITY_GROUP_ID}}\
          --image-id ${{secrets.GITHUB_AWS_IMG_ID}}\
@@ -38,19 +38,19 @@ jobs:
          )
          aws ec2 wait instance-running --instance-ids $INSTANCE_ID
          PUBLIC_IP=$(
-         --aws ec2 describe-instances\
-         --instances-ids $INSTANCE_ID\
+         aws ec2 describe-instances\
+         --instance-ids $INSTANCE_ID\
          --query 'Reservations[0].Instances[0].PublicIpAddress'\
          --output text 
 
          )
         
          echo "PUBLIC_IP=$PUBLIC_IP">>$GITHUB_ENV
-         
+         sleep 30
      - name: Connecting to EC2 and deploying app
        uses: appleboy/ssh-action@v0.1.10
        with:
-        host: $PUBLIC_IP
+        host: ${{env.PUBLIC_IP}}
         username: ubuntu
         key: ${{secrets.EC2_SSH_KEY}}
         script: |
@@ -59,7 +59,7 @@ jobs:
           sudo apt install docker.io -y
           sudo systemctl start docker
           sudo systemctl enable docker
-          sudo docker run -d -p 4000:4000 --name express_app sreyansh1/ci-cd-repo@latest
+          sudo docker run -d -p 4000:4000 --name express_app sreyansh1/ci-cd-repo:latest
 
 
 
