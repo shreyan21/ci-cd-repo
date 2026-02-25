@@ -28,7 +28,7 @@ jobs:
          aws ec2 run-instances \
          --count 1\
          --security-group-ids ${{secrets.GITHUB_AWS_SECURITY_GROUP_ID}}\
-         --image-id ${{secrets.GITHUB_AWS_IMG_ID}}\
+         --image-id ${{secrets.AWS_IMG_ID}}\
          --instance-type t2.micro\
          --key-name mypair\
          --query 'Instances[0].InstanceId'\
