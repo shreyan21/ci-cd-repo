@@ -1,74 +1,67 @@
-name: Deploying app
+name: Deploying express app
 
 on:
   push:
     branches:
       master
 
+
 jobs:
-  Deployingonec2:
+  ec2-creation:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-
     steps:
-     
+     - name: Loading repo
+       uses: actions/checkout@v4
+    
+     - name: Assuming role
+       uses: aws-actions/configure-aws-credentials@v2
+       with:
+        role-to-assume: arn:aws:iam::891377368653:role/ec2-access-to-github
+        aws-region: ap-south-1
 
-      - name: logging into AWS
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          role-to-assume: arn:aws:iam::891377368653:role/ec2-access-to-github
-          aws-region: ap-south-1
+     - name: Creating EC2
+       run: |
+         INSTANCE_ID=$(
+         --aws ec2 run-instances \
+         --count 1\
+         --security-group-ids ${{secrets.GITHUB_AWS_SECURITY_GROUP_ID}}\
+         --image-id ${{secrets.GITHUB_AWS_IMG_ID}}\
+         --instance-type t2.micro\
+         --key-name mypair\
+         --query 'Instances[0].InstanceId'\
+         --output text
+         
+         
+         )
+         aws ec2 wait instance-running --instance-ids $INSTANCE_ID
+         PUBLIC_IP=$(
+         --aws ec2 describe-instances\
+         --instances-ids $INSTANCE_ID\
+         --query 'Reservations[0].Instances[0].PublicIpAddress'\
+         --output text 
+
+         )
         
-
-      - name: creating ec2
-        id: ec2_setup
-        run: |
-          
-           IP=$(aws ec2 run-instances \
-           --count 1 \
-           --security-group-ids sg-062a6b166596e2bc1 \
-           --key-name mykey \
-           --image-id ami-019715e0d74f695be \
-           --instance-type t2.micro \
-           --query 'Instances[0].PublicIpAddress' \
-           --output text)
-
-           echo "INSTANCE_IP=$IP">>$GITHUB_OUTPUT
-           echo "Instance created with $IP"
-      
-      - name: Waiting for ssh to be ready
-        run: sleep 60
-      
-      - name: Logging into EC2
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{steps.ec2_setup.outputs.INSTANCE_IP}}
-          username: ubuntu
-          key: ${{secrets.EC2_SSH_KEY}}
-          script: |
-            sudo su
-            apt update -y
-            apt upgrade -y
-            apt install docker.io -y
-            systemctl start docker
-            docker run -d -p 4000:4000 --name c2 shreyans1/ci-cd-repo:latest
+         echo "PUBLIC_IP=$PUBLIC_IP">>$GITHUB_ENV
+         
+     - name: Connecting to EC2 and deploying app
+       uses: appleboy/ssh-action@v0.1.10
+       with:
+        host: $PUBLIC_IP
+        username: ubuntu
+        key: ${{secrets.EC2_SSH_KEY}}
+        script: |
+          sudo apt update -y
+          sudo apt upgrade -y 
+          sudo apt install docker.io -y
+          sudo systemctl start docker
+          sudo systemctl enable docker
+          sudo docker run -d -p 4000:4000 --name express_app sreyansh1/ci-cd-repo@latest
 
 
 
-          
-      
-      
 
 
       
-      
-
-      
-      
-
-
-        
-
-   
+       
+  
