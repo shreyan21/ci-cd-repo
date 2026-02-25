@@ -26,21 +26,21 @@ jobs:
        run: |
          INSTANCE_ID=$(
          aws ec2 run-instances \
-         --count 1\
-         --security-group-ids ${{secrets.GITHUB_AWS_SECURITY_GROUP_ID}}\
-         --image-id ${{secrets.AWS_IMG_ID}}\
-         --instance-type t2.micro\
-         --key-name mypair\
-         --query 'Instances[0].InstanceId'\
+         --count 1 \
+         --security-group-ids ${{secrets.GITHUB_AWS_SECURITY_GROUP_ID}} \
+         --image-id ${{secrets.AWS_IMG_ID}} \
+         --instance-type t2.micro \
+         --key-name mypair \
+         --query 'Instances[0].InstanceId' \
          --output text
          
          
          )
          aws ec2 wait instance-running --instance-ids $INSTANCE_ID
          PUBLIC_IP=$(
-         aws ec2 describe-instances\
-         --instance-ids $INSTANCE_ID\
-         --query 'Reservations[0].Instances[0].PublicIpAddress'\
+         aws ec2 describe-instances \
+         --instance-ids $INSTANCE_ID \
+         --query 'Reservations[0].Instances[0].PublicIpAddress' \
          --output text 
 
          )
